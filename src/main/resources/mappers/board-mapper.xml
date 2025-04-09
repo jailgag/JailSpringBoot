@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <!--  namespace값은 언제 바뀌어있었음??? 바꿔줄것!!04/0720:02분바꿔줌!! --> 
+  <!-- 아래코드는 첫번째 그아래는 두번째 코드!도 주석처리 -->
+  <!-- <mapper namespace="BoardMapper" > -->
+  <!-- <mapper namespace="com.jail.boot.board.model.store.BoardStore" > -->
+  <mapper namespace="com.jail.boot.board.model.store.BoardMapper" >
+  	<resultMap type="Board" id="boardResultMap">
+  		<id property="boardNo" column="BOARD_NO"/>
+  		<result property="boardTitle" column="BOARD_TITLE"/>
+  		<result property="boardContent" column="BOARD_CONTENT"/>
+  		<result property="boardCreateDate" column="BOARD_CREATE_DATE"/>
+  		<result property="boardUpdateDate" column="BOARD_UPDATE_DATE"/>
+  		<result property="readCount" column="READ_COUNT"/>
+  		
+  			 <!-- 4/8일 오전수업추가! colection 위에 있어야한다!-->
+ 	  <!-- 
+ 	  	Association 태그
+ 	  	property: 객체를 담을 VO의 필드명
+ 	  	select: 실행할 select태그의 id
+ 	  	column: 조회 결과 중 지정된 컬럼의 값을 파라미터로 전달
+ 	  	javaType:객체의 타입을 지정 아래도 주석처리!하고 다시 풀어줬음!4/8 21:33분 그리고 아래 select태그작성!
+ 	   -->
+  	  		<!-- 4/9일 다중첨부파일하면서 아래 4줄코드 주석처리한건 단일거!! -->
+<!-- 		  	  <association property="boardImg"  -->
+<!--   	   				select="selectBoardImgByNo"  -->
+<!--   	   				column="BOARD_NO"  -->
+<!--   	   				javaType="BoardImg"></association> -->
+<!-- 다중첨부코드 -->
+		<collection property="imgList"
+					select="selectBoardImgByNo" column="BOARD_NO" 
+					javaType="java.util.List"
+					ofType="BoardImg"></collection>
+  		
+  		
+  		<!-- result property="commentList" column"" 안된다!! -->
+  		<!-- 
+  			Collection 태그
+  			select로 조회된 결과를 컬렉션(list)에 담아 지정된 필드에 셋팅
+  			property: List를 (????) VO의 필드명
+  			select: 실행할 select의 id
+  			column: 조회 결과 중 지정된 컬럼의 값을 파라미터로 전달
+  			javaType: list(컬렉션)의 타입을 지정
+  			ofType:list(컬렉션)의 제네릭(타입제한) 지정 
+  			이거 다시 복습할때 어디서 따와서 적는지 정리해야함!
+  		 -->
+  		 <collection property="commentList" 
+  		 			select="selectCommentList" column="BOARD_NO"
+  		 									javaType="java.util.List"
+  		 									ofType="Comment"></collection>
+</resultMap>
+  		<select id="selectOneByNo" resultMap="boardResultMap">
+	  		SELECT * FROM BOARD WHERE BOARD_NO = #{boardNo} AND BOARD_YN ='Y'
+		</select>
+	  <!-- 아래selec문이 있어야지 collection태그 동작함?! -->
+	 
+ 	  <select id="selectCommentList" resultType="Comment">
+ 	  	SELECT * FROM "COMMENT" WHERE BOARD_NO = #{boardNo} ORDER BY COMMENT_NO DESC
+ 	  </select> 
+ 	  
+	 
+  <!-- 적을거있음!! 
+  		useGeneratedKeys 속성: DB 내부적으로 생성한 키(시퀀스)를 전달된
+  		파라미터의 필드로 대입가능 여부 지정
+  		
+  -->
+		<!-- 내가 실습했던 코드랑 달라짐...주석처리하고 다시 작성!!04/07 20:34 -->
+		<!-- <insert id="insertBoard" parameterType="BoardAddRequest" useGeneratedKeys="true"> -->
+		<insert id="insertBoard" useGeneratedKeys="true">
+		<selectKey order="BEFORE" resultType="_int" keyProperty="boardNo">
+			SELECT SEQ_BOARD_NO.NEXTVAL FROM DUAL
+		</selectKey>
+	 	INSERT INTO BOARD VALUES(#{boardNo},
+                  #{boardTitle},
+                  #{boardContent},
+                  DEFAULT, NULL, DEFAULT, DEFAULT, #{memberNo})
+		</insert>
+		
+		 <insert id="insertBoardImage">
+			INSERT INTO BOARD_IMG
+			VALUES(SEQ_BOARD_IMG_NO.NEXTVAL, #{imgPath}, #{imgRename}, #{imgOriginalName}, #{imgOrder} , #{boardNo})
+		 </insert>
+		
+ 		<select id="selectBoardImgByNo" resultType="BoardImg">
+ 			SELECT * FROM BOARD_IMG WHERE BOARD_NO = #{boardNo}
+ 		</select> 
+ 		<!-- 4/9일 수업 다중파일 저장 코드작성! 인라인뷰서브쿼리 UNION ALL 부분 띄어쓰기 주의!!-->
+ 		<!-- 
+ 			-특정 SQL 구문을 반복할때 사용
+ 			반복되는 사이에 구분자(separator)를 추가 할수 있음.
+ 			collection: 반복할 객체의 타입작성(list, set, map,....)
+ 			item:  순차적으로 꺼낸 하나의 요소를 저장하는 변수
+ 			index: 현재 반복접근중인 인덱스(0,1,2,3,4,..)
+ 			open: 반복 전에 출력할 sql
+ 			close: 반복 종료후에 출력한 sql
+ 			separator:반복 사이사이 구분자
+ 		 -->
+ 		<insert id="insertBoardImageList">
+ 			INSERT INTO BOARD_IMG
+ 			SELECT SEQ_BOARD_IMG_NO.NEXTVAL, BI.*
+ 			FROM (
+ 				<foreach collection="list" item="img" separator=" UNION ALL " >
+ 					SELECT #{img.imgPath} IMG_PATH,
+ 							#{img.imgRename} IMG_RENAME,
+ 							#{img.imgOriginalName} IMG_ORIGINAL_NAME,
+ 							#{img.imgOrder} IMG_ORDER,
+ 							#{img.boardNo} BOARD_NO
+ 						FROM DUAL
+ 				</foreach>
+ 			) BI
+ 		</insert>
+		
+  </mapper>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <!-- 첫번째 코드 주석 -->
+  <!--   <mapper namespace="CommentMapper" >-->
+  <!-- 두번째 코드도 주석! -->
+  <!-- <mapper namespace="com.jail.boot.board.model.store.CommentStore" > -->
+ 	 <mapper namespace="com.jail.boot.board.model.store.CommentMapper" >
+ 	<insert id="insertComment">
+ 		 INSERT INTO "COMMENT"
+        VALUES(SEQ_COMMENT_NO.NEXTVAL, #{commentContent},DEFAULT, DEFAULT, #{boardNo} , 1, NULL)
+ 	</insert>
+		<select id="selectCommentList" resultType="Comment">
+	  	SELECT * FROM "COMMENT" WHERE BOARD_NO = #{boardNo} ORDER BY COMMENT_NO DESC
+	</select>
+  </mapper>
