@@ -17,6 +17,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 //@Transactional  커밋을하지않고 롤백을 해주는어노테이션!!
 
 @SpringBootTest
-@AutoConfigureMockMvc //테스트 성공후 롤백!(4로 등록성공했는데 DB에는 저장안됨!) 저장하려면 저코드주석처리하기!!
-@Transactional 
+@AutoConfigureMockMvc 
+//@Transactional //테스트 성공후 롤백!(4로 등록성공했는데 DB에는 저장안됨!) 저장하려면 저코드주석처리함!
 @Slf4j
 public class BoardControllerTest {
 	
@@ -57,14 +58,24 @@ public class BoardControllerTest {
 	public void testWriteBoard () throws Exception {
 		LOGGER.info("========testWriteBoard() 메소드 시작!!=========== ");
 		
+		// 가짜 이미지 파일 생성                                  	//파일이름   //파일  		
+		//아래코드 작성후 아래 .file(image1)~~적어줌!
+		//다시 테스트확인 유닛테스트5-1.jpg 로 등록 !테스트할때 저부분이 중요하다!
+		MockMultipartFile image1 
+		= new MockMultipartFile("images", "유닛테스트5-1.jpg","images/jpeg","test images content1".getBytes());
+		MockMultipartFile image2 
+		= new MockMultipartFile("images", "유닛테스트5-2.jpg","images/jpeg","test images content2".getBytes());
+		
 		//post 2번째 선택하고 url 적고!~.부분부터 임포트 확인해볼것!!
 		//코드 수정 단계에서 post부분을 코드수정함!!
 		//.contentType(MediaType.APPLICATION_JSON) <---이코드는 밑에 필요없어서 지움(주석처리해서 일단나둠!)
 		//	.content(json)) <--이코드도 아래에서 지움!! 테스트 하고 지워줄예정!!!
 		//아래코드 적어주고 BoardController로 감!!
 				mockMvc.perform(multipart("/board/insert")
-						.param("boardTitle", "유닛테스트 컨트롤러 등록4")
-						.param("boardContent", "유닛테스트 컨트롤러 등록4"))
+						.file(image1)
+						.file(image2)
+						.param("boardTitle", "유닛테스트 컨트롤러 등록5")
+						.param("boardContent", "유닛테스트 컨트롤러 등록5"))
 						//.andExpect(status().isOk()); // <--이걸 쓰면 에러남 그래서 아래코드씀!!
 						.andExpect(redirectedUrl("/board/list"));
 				
