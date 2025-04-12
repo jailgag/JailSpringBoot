@@ -45,8 +45,11 @@ public class BoardController {
 	@PostMapping("/insert")
 	public String WriteBoard(@ModelAttribute BoardAddRequest board,
 //			@RequestParam("images") MultipartFile images <--단일파일 아래코드는 다중파일코드!!
+			//파일테스트코드작성할때 아래 requestParam부분 코드에 추가 코드작성!!
+			//원래코드는 @RequestParam("images") List<MultipartFile> images 
+			//확인해보고 에러나면 위에 원래코드로 복귀할것!!여기서!!
 			
-			@RequestParam("images") List<MultipartFile> images 
+			@RequestParam(value="images" , required=false) List<MultipartFile> images 
 			,HttpSession session
 			,Model model) throws IllegalStateException, IOException {
 		System.out.println(images);
